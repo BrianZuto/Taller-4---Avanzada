@@ -1,0 +1,234 @@
+<app-layout>
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1>Dashboard</h1>
+      <p>Resumen general de tu inventario, ventas y estadísticas</p>
+    </div>
+    <button class="btn-refresh" (click)="recargarDatos()" [disabled]="loading">
+      <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
+      {{ loading ? 'Cargando...' : 'Actualizar' }}
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Cargando datos del dashboard...</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <div class="error-message">
+      <i class="fas fa-exclamation-triangle"></i>
+      <h3>Error al cargar datos</h3>
+      <p>No se pudieron cargar los datos del dashboard. Intenta nuevamente.</p>
+      <button class="btn-retry" (click)="recargarDatos()">
+        <i class="fas fa-redo"></i> Reintentar
+      </button>
+    </div>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading && !error">
+
+    <!-- Métricas principales -->
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-header">
+          <h3>Total Productos</h3>
+          <i class="fas fa-cube"></i>
+        </div>
+        <div class="metric-value">{{ estadisticas.totalProductos }}</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <h3>Total Ventas</h3>
+          <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div class="metric-value">{{ estadisticas.totalVentas }}</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <h3>Ventas Hoy</h3>
+          <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="metric-value">{{ formatearMoneda(estadisticas.ventasHoy) }}</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <h3>Total Categorías</h3>
+          <i class="fas fa-tags"></i>
+        </div>
+        <div class="metric-value">{{ estadisticas.totalCategorias }}</div>
+      </div>
+    </div>
+
+    <!-- Reportes de Ventas -->
+    <div class="report-section">
+      <h2><i class="fas fa-chart-line"></i> Reportes de Ventas</h2>
+      <div class="report-cards">
+        <div class="report-card">
+          <h3>Ventas por Día (Últimos 7 Días)</h3>
+          <div class="chart-placeholder">
+            <div *ngIf="salesReports.ventasPorDia && salesReports.ventasPorDia.length > 0" class="sales-chart">
+              <div *ngFor="let item of salesReports.ventasPorDia" class="chart-item">
+                <span class="chart-label">{{ item.fecha }}</span>
+                <div class="chart-bar-container">
+                  <div class="chart-bar" [style.width.%]="(item.total / maxVentaDia) * 100"></div>
+                </div>
+                <span class="chart-value">{{ formatearMoneda(item.total) }}</span>
+              </div>
+            </div>
+            <div *ngIf="!salesReports.ventasPorDia || salesReports.ventasPorDia.length === 0" class="no-data-message">
+              No hay datos de ventas por día.
+            </div>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <h3>Ventas por Mes (Últimos 12 Meses)</h3>
+          <div class="chart-placeholder">
+            <div *ngIf="salesReports.ventasPorMes && salesReports.ventasPorMes.length > 0" class="sales-chart">
+              <div *ngFor="let item of salesReports.ventasPorMes" class="chart-item">
+                <span class="chart-label">{{ item.mes }}</span>
+                <div class="chart-bar-container">
+                  <div class="chart-bar" [style.width.%]="(item.total / maxVentaMes) * 100"></div>
+                </div>
+                <span class="chart-value">{{ formatearMoneda(item.total) }}</span>
+              </div>
+            </div>
+            <div *ngIf="!salesReports.ventasPorMes || salesReports.ventasPorMes.length === 0" class="no-data-message">
+              No hay datos de ventas por mes.
+            </div>
+          </div>
+        </div>
+
+        <div class="report-card full-width">
+          <h3>Top Productos Vendidos</h3>
+          <div class="top-products-list">
+            <div *ngIf="salesReports.topProductosVendidos && salesReports.topProductosVendidos.length > 0; else noTopProducts">
+              <div *ngFor="let item of salesReports.topProductosVendidos; let i = index" class="product-ranking-item">
+                <span class="rank">{{ i + 1 }}</span>
+                <div class="product-info">
+                  <h4>{{ item.producto }}</h4>
+                  <p>Cantidad Vendida: {{ item.cantidadVendida }}</p>
+                </div>
+                <div class="sales-bar">
+                  <div class="bar-fill" [style.width.%]="(item.cantidadVendida / maxCantidadVendida) * 100"></div>
+                </div>
+              </div>
+            </div>
+            <ng-template #noTopProducts>
+              <div class="no-data-message">No hay productos vendidos aún.</div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reportes de Productos -->
+    <div class="report-section">
+      <h2><i class="fas fa-cubes"></i> Reportes de Productos</h2>
+      <div class="report-cards">
+        <div class="report-card">
+          <h3>Productos por Categoría</h3>
+          <div class="chart-placeholder">
+            <div *ngIf="productReports.productosPorCategoria && productReports.productosPorCategoria.length > 0" class="category-chart">
+              <div *ngFor="let item of productReports.productosPorCategoria" class="category-item">
+                <span class="category-name">{{ item.categoria }}</span>
+                <div class="category-bar-container">
+                  <div class="category-bar" [style.width.%]="(item.cantidad / maxProductosCategoria) * 100"></div>
+                </div>
+                <span class="category-count">{{ item.cantidad }}</span>
+              </div>
+            </div>
+            <div *ngIf="!productReports.productosPorCategoria || productReports.productosPorCategoria.length === 0" class="no-data-message">
+              No hay datos de productos por categoría.
+            </div>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <h3>Productos con Stock Bajo</h3>
+          <div class="stock-low-list">
+            <div *ngIf="productReports.productosStockBajo && productReports.productosStockBajo.length > 0; else noLowStock">
+              <div *ngFor="let item of productReports.productosStockBajo" class="stock-low-item">
+                <h4>{{ item.nombre }}</h4>
+                <p>Stock Actual: {{ item.stockActual }} (Mínimo: {{ item.stockMinimo }})</p>
+              </div>
+            </div>
+            <ng-template #noLowStock>
+              <div class="no-data-message">No hay productos con stock bajo.</div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reportes de Inventario -->
+    <div class="report-section">
+      <h2><i class="fas fa-warehouse"></i> Reportes de Inventario</h2>
+      <div class="report-cards">
+        <div class="report-card">
+          <h3>Valor Total del Inventario</h3>
+          <div class="metric-large">
+            {{ formatearMoneda(inventoryReports.valorTotalInventario) }}
+          </div>
+        </div>
+
+        <div class="report-card">
+          <h3>Distribución de Stock</h3>
+          <div class="stock-distribution">
+            <div class="stock-item stock-bajo">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>Stock Bajo: {{ inventoryReports.productosStockBajo }}</span>
+            </div>
+            <div class="stock-item stock-medio">
+              <i class="fas fa-info-circle"></i>
+              <span>Stock Medio: {{ inventoryReports.productosStockMedio }}</span>
+            </div>
+            <div class="stock-item stock-alto">
+              <i class="fas fa-check-circle"></i>
+              <span>Stock Alto: {{ inventoryReports.productosStockAlto }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen del sistema -->
+    <div class="summary-section">
+      <h2>Resumen del Sistema</h2>
+      <div class="summary-cards">
+        <div class="summary-card">
+          <i class="fas fa-chart-pie"></i>
+          <h4>Inventario Total</h4>
+          <p>{{ estadisticas.totalProductos }} productos activos</p>
+        </div>
+        <div class="summary-card">
+          <i class="fas fa-tags"></i>
+          <h4>Categorías</h4>
+          <p>{{ estadisticas.totalCategorias }} categorías registradas</p>
+        </div>
+        <div class="summary-card">
+          <i class="fas fa-shopping-cart"></i>
+          <h4>Ventas</h4>
+          <p>{{ estadisticas.totalVentas }} transacciones realizadas</p>
+        </div>
+        <div class="summary-card">
+          <i class="fas fa-dollar-sign"></i>
+          <h4>Ingresos Hoy</h4>
+          <p>{{ formatearMoneda(estadisticas.ventasHoy) }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</app-layout>

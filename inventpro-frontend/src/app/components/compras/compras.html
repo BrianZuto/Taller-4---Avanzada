@@ -1,0 +1,95 @@
+<app-layout>
+  <div class="compras-container">
+    <div class="compras-header">
+      <h2>Gestión de Compras</h2>
+      <div class="header-actions">
+        <div class="search-container">
+          <input type="text" placeholder="Buscar productos..." [(ngModel)]="busqueda" (input)="buscarProductos()">
+          <i class="fas fa-search search-icon"></i>
+        </div>
+        <button class="btn-primary" (click)="abrirModalNuevaCompra()">
+          <i class="fas fa-plus"></i> Nueva Compra
+        </button>
+      </div>
+    </div>
+
+    <div class="compras-content">
+      <div class="table-container">
+        <table class="compras-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Stock Actual</th>
+              <th>Precio Unitario</th>
+              <th>Cantidad a Comprar</th>
+              <th>Total</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let producto of productos">
+              <td>{{ producto.nombre }}</td>
+              <td>
+                <span class="categoria-tag">{{ producto.categoriaNombre }}</span>
+              </td>
+              <td class="stock">{{ producto.stock }}</td>
+              <td class="precio">${{ producto.precio | number:'1.2-2' }}</td>
+              <td>
+                <div class="cantidad-input">
+                  <button class="btn-cantidad" (click)="decrementarCantidad(producto)" [disabled]="getCantidadCompra(producto) <= 0">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <input type="number"
+                         [value]="getCantidadCompra(producto)"
+                         (input)="actualizarCantidad(producto, $event)"
+                         min="0"
+                         class="cantidad-field">
+                  <button class="btn-cantidad" (click)="incrementarCantidad(producto)">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </td>
+              <td class="total">${{ calcularTotal(producto) | number:'1.2-2' }}</td>
+              <td class="acciones">
+                <button class="btn-icon btn-buy"
+                        (click)="comprarProducto(producto)"
+                        [disabled]="getCantidadCompra(producto) <= 0"
+                        title="Comprar {{ producto.nombre }}">
+                  <i class="fas fa-shopping-cart"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="productos.length === 0">
+              <td colspan="7" class="no-data">No hay productos disponibles.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Resumen de Compra -->
+    <div class="resumen-compra" *ngIf="tieneProductosEnCarrito()">
+      <div class="resumen-content">
+        <h3>Resumen de Compra</h3>
+        <div class="resumen-details">
+          <div class="resumen-item" *ngFor="let item of getProductosEnCarrito()">
+            <span>{{ item.producto.nombre }} ({{ item.cantidad }} unidades)</span>
+            <span>${{ (item.cantidad * item.producto.precio) | number:'1.2-2' }}</span>
+          </div>
+          <div class="resumen-total">
+            <strong>Total: ${{ calcularTotalCompra() | number:'1.2-2' }}</strong>
+          </div>
+        </div>
+        <div class="resumen-actions">
+          <button class="btn-cancel" (click)="limpiarCarrito()">
+            <i class="fas fa-trash"></i> Limpiar Carrito
+          </button>
+          <button class="btn-primary" (click)="procesarCompra()">
+            <i class="fas fa-credit-card"></i> Procesar Compra
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</app-layout>

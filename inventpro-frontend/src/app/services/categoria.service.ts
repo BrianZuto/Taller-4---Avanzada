@@ -1,0 +1,39 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Categoria, CategoriaRequest } from '../models/producto.models';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CategoriaService {
+  private API_URL = 'http://localhost:8080/api/categorias';
+
+  constructor(private http: HttpClient) {}
+
+  getAllCategorias(): Observable<Categoria[]> {
+    return this.http.get<Categoria[]>(this.API_URL);
+  }
+
+  getCategoriaById(id: number): Observable<Categoria> {
+    return this.http.get<Categoria>(`${this.API_URL}/${id}`);
+  }
+
+  createCategoria(categoria: CategoriaRequest): Observable<Categoria> {
+    return this.http.post<Categoria>(this.API_URL, categoria);
+  }
+
+  updateCategoria(id: number, categoria: CategoriaRequest): Observable<Categoria> {
+    return this.http.put<Categoria>(`${this.API_URL}/${id}`, categoria);
+  }
+
+  deleteCategoria(id: number): Observable<any> {
+    return this.http.delete(`${this.API_URL}/${id}`);
+  }
+
+  buscarCategorias(busqueda: string): Observable<Categoria[]> {
+    return this.http.get<Categoria[]>(`${this.API_URL}/buscar`, {
+      params: { busqueda }
+    });
+  }
+}

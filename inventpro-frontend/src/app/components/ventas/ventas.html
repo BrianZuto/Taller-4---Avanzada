@@ -1,0 +1,155 @@
+<app-layout>
+  <div class="ventas-container">
+    <div class="ventas-header">
+      <h2>Gestión de Ventas</h2>
+      <div class="header-actions">
+        <div class="search-container">
+          <input type="text" placeholder="Buscar ventas..." [(ngModel)]="busqueda" (input)="buscarVentas()">
+          <i class="fas fa-search search-icon"></i>
+        </div>
+        <button class="btn-primary" (click)="abrirModalNuevaVenta()">
+          <i class="fas fa-plus"></i> Nueva Venta
+        </button>
+      </div>
+    </div>
+
+    <div class="ventas-content">
+      <div class="table-container">
+        <table class="ventas-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Productos</th>
+              <th>Total</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let venta of ventas">
+              <td class="id">#{{ venta.id }}</td>
+              <td class="fecha">{{ venta.fechaVenta | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td class="cliente">{{ venta.cliente }}</td>
+              <td class="productos">
+                <div class="productos-list">
+                  <span *ngFor="let producto of venta.productos" class="producto-item">
+                    {{ producto.productoNombre }} ({{ producto.cantidad }})
+                  </span>
+                </div>
+              </td>
+              <td class="total">${{ venta.total | number:'1.2-2' }}</td>
+              <td class="acciones">
+                <button class="btn-icon btn-view" (click)="verVenta(venta)" title="Ver detalles">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-icon btn-delete" (click)="eliminarVenta(venta.id)" title="Eliminar venta">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="ventas.length === 0">
+              <td colspan="6" class="no-data">No hay ventas registradas.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Nueva Venta -->
+  <div class="modal" *ngIf="mostrarModal" (click)="cerrarModal($event)">
+    <div class="modal-content venta-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ ventaEditando ? 'Editar Venta' : 'Nueva Venta' }}</h3>
+        <button class="btn-close" (click)="cerrarModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form #ventaForm="ngForm" (ngSubmit)="guardarVenta()">
+        <div class="form-group">
+          <label for="cliente">Cliente *</label>
+          <input type="text" id="cliente" name="cliente" [(ngModel)]="ventaFormData.cliente" required maxlength="100">
+        </div>
+
+        <div class="form-group">
+          <label>Productos *</label>
+          <div class="productos-selection">
+            <div class="producto-item" *ngFor="let item of productosSeleccionados; let i = index">
+              <div class="producto-info">
+                <span class="producto-nombre">{{ item.producto.nombre }}</span>
+                <span class="producto-precio">${{ item.producto.precio | number:'1.2-2' }}</span>
+                <span class="producto-stock">Stock: {{ item.producto.stock }}</span>
+              </div>
+              <div class="producto-controls">
+                <button type="button" class="btn-cantidad" (click)="decrementarCantidad(i)" [disabled]="item.cantidad <= 0">
+                  <i class="fas fa-minus"></i>
+                </button>
+                <input type="number" name="cantidad_{{i}}" [(ngModel)]="item.cantidad" min="0" [max]="item.producto.stock" class="cantidad-field">
+                <button type="button" class="btn-cantidad" (click)="incrementarCantidad(i)" [disabled]="item.cantidad >= item.producto.stock">
+                  <i class="fas fa-plus"></i>
+                </button>
+                <button type="button" class="btn-remove" (click)="removerProducto(i)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            <div *ngIf="productosSeleccionados.length === 0" class="no-products">
+              <p>No hay productos seleccionados</p>
+            </div>
+          </div>
+          <button type="button" class="btn-add-product" (click)="abrirSelectorProductos()">
+            <i class="fas fa-plus"></i> Agregar Producto
+          </button>
+        </div>
+
+        <div class="form-group total-section">
+          <label>Total: ${{ calcularTotalVenta() | number:'1.2-2' }}</label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="cerrarModal()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-save" [disabled]="!ventaForm.valid || productosSeleccionados.length === 0">
+            {{ ventaEditando ? 'Guardar Cambios' : 'Crear Venta' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Selección de Productos -->
+  <div class="modal" *ngIf="mostrarSelectorProductos" (click)="cerrarSelectorProductos($event)">
+    <div class="modal-content selector-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Seleccionar Producto</h3>
+        <button class="btn-close" (click)="cerrarSelectorProductos()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="selector-content">
+        <div class="search-container">
+          <input type="text" placeholder="Buscar productos..." [(ngModel)]="busquedaProductos" (input)="filtrarProductos()" name="busquedaProductos">
+          <i class="fas fa-search search-icon"></i>
+        </div>
+        <div class="productos-list">
+          <div class="producto-selector-item" *ngFor="let producto of productosFiltrados" (click)="seleccionarProducto(producto)">
+            <div class="producto-info">
+              <h4>{{ producto.nombre }}</h4>
+              <p>Categoría: {{ producto.categoriaNombre }}</p>
+              <p>Precio: ${{ producto.precio | number:'1.2-2' }}</p>
+              <p>Stock: {{ producto.stock }}</p>
+            </div>
+            <div class="producto-action">
+              <i class="fas fa-plus-circle"></i>
+            </div>
+          </div>
+          <div *ngIf="productosFiltrados.length === 0" class="no-data">
+            No hay productos disponibles
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</app-layout>

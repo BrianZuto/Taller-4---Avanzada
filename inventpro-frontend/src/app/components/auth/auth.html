@@ -1,0 +1,137 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <!-- Header -->
+    <div class="auth-header">
+      <div class="logo">
+        <div class="logo-icon">📦</div>
+        <h1>InventPro</h1>
+        <p>Sistema de Gestión de Inventario</p>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="auth-tabs">
+      <button
+        class="tab-button"
+        [class.active]="isLoginMode"
+        (click)="setLoginMode(true)">
+        Iniciar Sesión
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="!isLoginMode"
+        (click)="setLoginMode(false)">
+        Registrarse
+      </button>
+    </div>
+
+    <!-- Forms -->
+    <div class="auth-forms">
+      <!-- Login Form -->
+      <form *ngIf="isLoginMode" class="auth-form" (ngSubmit)="onLogin()" #loginForm="ngForm">
+        <div class="form-group">
+          <label for="loginEmail">Correo electrónico</label>
+          <input
+            type="email"
+            id="loginEmail"
+            name="email"
+            [(ngModel)]="loginRequest.email"
+            placeholder="tu@email.com"
+            required
+            email
+            #email="ngModel">
+          <div *ngIf="email.invalid && email.touched" class="error-message">
+            <span *ngIf="email.errors?.['required']">El email es obligatorio</span>
+            <span *ngIf="email.errors?.['email']">El formato del email no es válido</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Contraseña</label>
+          <input
+            type="password"
+            id="loginPassword"
+            name="password"
+            [(ngModel)]="loginRequest.password"
+            placeholder="********"
+            required
+            #password="ngModel">
+          <div *ngIf="password.invalid && password.touched" class="error-message">
+            La contraseña es obligatoria
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="auth-button"
+          [disabled]="loginForm.invalid || isLoading">
+          {{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form *ngIf="!isLoginMode" class="auth-form" (ngSubmit)="onRegister()" #registerForm="ngForm">
+        <div class="form-group">
+          <label for="registerName">Nombre completo</label>
+          <input
+            type="text"
+            id="registerName"
+            name="nombreCompleto"
+            [(ngModel)]="registerRequest.nombreCompleto"
+            placeholder="Juan Pérez"
+            required
+            #nombreCompleto="ngModel">
+          <div *ngIf="nombreCompleto.invalid && nombreCompleto.touched" class="error-message">
+            El nombre completo es obligatorio
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="registerEmail">Correo electrónico</label>
+          <input
+            type="email"
+            id="registerEmail"
+            name="email"
+            [(ngModel)]="registerRequest.email"
+            placeholder="tu@email.com"
+            required
+            email
+            #email="ngModel">
+          <div *ngIf="email.invalid && email.touched" class="error-message">
+            <span *ngIf="email.errors?.['required']">El email es obligatorio</span>
+            <span *ngIf="email.errors?.['email']">El formato del email no es válido</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="registerPassword">Contraseña</label>
+          <input
+            type="password"
+            id="registerPassword"
+            name="password"
+            [(ngModel)]="registerRequest.password"
+            placeholder="********"
+            required
+            minlength="6"
+            #password="ngModel">
+          <div *ngIf="password.invalid && password.touched" class="error-message">
+            <span *ngIf="password.errors?.['required']">La contraseña es obligatoria</span>
+            <span *ngIf="password.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres</span>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="auth-button"
+          [disabled]="registerForm.invalid || isLoading">
+          {{ isLoading ? 'Creando cuenta...' : 'Crear Cuenta' }}
+        </button>
+      </form>
+    </div>
+
+    <!-- Error Messages -->
+    <div *ngIf="errorMessage" class="error-message-container">
+      <p class="error-message">{{ errorMessage }}</p>
+    </div>
+  </div>
+</div>
