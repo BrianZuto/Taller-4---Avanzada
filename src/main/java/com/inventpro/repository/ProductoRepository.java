@@ -17,7 +17,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     List<Producto> findByCategoriaIdAndActivoTrue(Long categoriaId);
     
     @Query("SELECT p FROM Producto p WHERE p.activo = true AND " +
-           "(LOWER(p.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR " +
+           "(LOWER(p.nombre) LIKE LOWER(CONCAT('%%%', :busqueda, '%%%')) OR " +
            "LOWER(p.presentacion) LIKE LOWER(CONCAT('%', :busqueda, '%')))")
     List<Producto> buscarPorNombreOPresentacion(String busqueda);
     
