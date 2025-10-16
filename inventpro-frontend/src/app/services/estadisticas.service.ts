@@ -1,14 +1,20 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EstadisticasService {
-  private API_URL = 'http://localhost:8080/api/estadisticas';
+  private API_URL: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) {
+    this.API_URL = this.configService.getEstadisticasUrl();
+  }
 
   getDashboardData(): Observable<any> {
     return this.http.get<any>(`${this.API_URL}/dashboard`);

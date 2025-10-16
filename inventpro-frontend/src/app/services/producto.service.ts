@@ -2,14 +2,20 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Producto, ProductoRequest } from '../models/producto.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductoService {
-  private API_URL = 'http://localhost:8080/api/productos';
+  private API_URL: string;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) {
+    this.API_URL = this.configService.getProductosUrl();
+  }
 
   getAllProductos(): Observable<Producto[]> {
     return this.http.get<Producto[]>(this.API_URL);
