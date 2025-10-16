@@ -19,7 +19,8 @@ export class AuthService {
     private tokenStorage: TokenStorageService,
     private configService: ConfigService
   ) {
-    this.API_URL = this.configService.getAuthUrl();
+    // Usar ruta relativa para producción
+    this.API_URL = '/api/auth';
     this.loadCurrentUser();
   }
 

@@ -14,7 +14,8 @@ export class VentaService {
     private http: HttpClient,
     private configService: ConfigService
   ) {
-    this.API_URL = this.configService.getVentasUrl();
+    // Usar ruta relativa para producción
+    this.API_URL = '/api/ventas';
   }
 
   getAllVentas(): Observable<Venta[]> {

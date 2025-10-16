@@ -13,7 +13,8 @@ export class EstadisticasService {
     private http: HttpClient,
     private configService: ConfigService
   ) {
-    this.API_URL = this.configService.getEstadisticasUrl();
+    // Usar ruta relativa para producción
+    this.API_URL = '/api/estadisticas';
   }
 
   getDashboardData(): Observable<any> {
